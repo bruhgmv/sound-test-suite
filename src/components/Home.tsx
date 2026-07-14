@@ -203,10 +203,10 @@ export default function Home({ setActiveTab }: HomeProps) {
               Privacy & Performance
             </span>
             <h2 className="font-sans text-2xl sm:text-3xl font-bold tracking-tight text-ink mb-6">
-              Clean, accurate testing. Free from advertising clutter.
+              Clean, accurate testing. Designed for high-fidelity diagnostics.
             </h2>
             <p className="font-sans text-sm text-body leading-relaxed mb-8">
-              Most diagnostic tools are loaded with flashing ads, auto-playing video popups, and obscure server-bound file uploads. Sound Test establishes an eye-safe, zero-clutter developer aesthetic.
+              Most diagnostic tools require complex configurations or heavy server-side processing. Sound Test runs entirely in your browser using local APIs, establishing an eye-safe, high-performance developer aesthetic.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -225,8 +225,8 @@ export default function Home({ setActiveTab }: HomeProps) {
                   <Check className="w-2.5 h-2.5" />
                 </div>
                 <div className="font-sans text-xs text-body">
-                  <span className="font-semibold text-ink block">Ad-Free Workspace</span>
-                  Stark minimalist view for audio focus.
+                  <span className="font-semibold text-ink block">Low Latency Engine</span>
+                  Pure client-side execution for precise audio focus.
                 </div>
               </div>
 

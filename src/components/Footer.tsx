@@ -105,7 +105,7 @@ export default function Footer({ setActiveTab }: FooterProps) {
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-sm bg-ink overflow-hidden flex items-center justify-center border border-hairline">
               <img 
-                src="/src/assets/images/minimal_bw_sound_logo_1784013796271.jpg" 
+                src="/logo.jpg" 
                 alt="Logo" 
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"

@@ -28,7 +28,7 @@ export default function Header({ activeTab, setActiveTab, theme, toggleTheme }: 
         >
           <div className="relative flex items-center justify-center w-8 h-8 rounded bg-ink overflow-hidden transition-transform duration-200 group-hover:scale-105 border border-hairline">
             <img 
-              src="/src/assets/images/minimal_bw_sound_logo_1784013796271.jpg" 
+              src="/logo.jpg" 
               alt="Sound Test Logo" 
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
