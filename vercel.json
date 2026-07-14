@@ -1,0 +1,6 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/(speaker|left-right|headphones|microphone)", "destination": "/index.html" }
+  ]
+}
