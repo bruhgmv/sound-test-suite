@@ -1,4 +1,7 @@
 import type { Tab } from '../types';
+import { Activity } from 'lucide-react';
+// @ts-ignore
+import logoImg from '../assets/images/minimal_bw_sound_logo_1784013796271.jpg';
 
 interface FooterProps {
   setActiveTab: (tab: Tab) => void;
@@ -92,7 +95,7 @@ export default function Footer({ setActiveTab }: FooterProps) {
             </h4>
             <ul className="space-y-2.5">
               <li className="font-sans text-xs text-body">
-                <span className="text-ink font-medium">No Ads / Clutter:</span> Clean, minimal, zero friction.
+                <span className="text-ink font-medium">High Fidelity:</span> Advanced audio generation algorithms.
               </li>
               <li className="font-sans text-xs text-body">
                 <span className="text-ink font-medium">Immediate Feed:</span> Realtime sample rates & phase toggles.
@@ -106,10 +109,24 @@ export default function Footer({ setActiveTab }: FooterProps) {
             <div className="w-5 h-5 rounded-sm bg-ink overflow-hidden flex items-center justify-center border border-hairline">
               <img 
                 src="/logo.jpg" 
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (!target.getAttribute('data-fallback')) {
+                    target.setAttribute('data-fallback', 'true');
+                    target.src = logoImg;
+                  } else {
+                    target.style.display = 'none';
+                    const fb = target.nextElementSibling;
+                    if (fb) fb.classList.remove('hidden');
+                  }
+                }}
                 alt="Logo" 
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
+              <div className="logo-fallback hidden w-full h-full flex items-center justify-center bg-ink text-brand-cyan">
+                <Activity className="w-3 h-3" />
+              </div>
             </div>
             <span className="font-sans text-[11px] text-body">
               © {new Date().getFullYear()} Sound Test Suite. Inspired by elegant, performance-first aesthetics.

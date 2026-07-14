@@ -7,6 +7,7 @@ export default function MicrophoneTest() {
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>('');
   const [specs, setSpecs] = useState<DeviceSpec | null>(null);
+  const [micError, setMicError] = useState<{ name: string; message: string } | null>(null);
 
   // Recorder State
   const [recordingState, setRecordingState] = useState<'idle' | 'recording' | 'recorded'>('idle');
@@ -52,16 +53,28 @@ export default function MicrophoneTest() {
   const requestMicPermission = async () => {
     setStatus('requesting');
     try {
-      const constraints: MediaStreamConstraints = {
-        audio: selectedDeviceId ? { deviceId: { exact: selectedDeviceId } } : true,
-      };
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      let stream: MediaStream;
+      const hasSpecificId = selectedDeviceId && selectedDeviceId !== 'default' && selectedDeviceId !== '';
+      
+      try {
+        const constraints: MediaStreamConstraints = {
+          audio: hasSpecificId ? { deviceId: { ideal: selectedDeviceId } } : true,
+        };
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (err) {
+        console.warn('Overconstrained or failed with specific device ID, falling back to general audio constraints', err);
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
+
       streamRef.current = stream;
 
       // Initialize analyzer
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       const ctx = new AudioContextClass();
-      const source = ctx.createMediaStreamAudioSource(stream);
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
+      const source = ctx.createMediaStreamSource(stream);
       const analyser = ctx.createAnalyser();
 
       analyser.fftSize = 1024;
@@ -85,11 +98,15 @@ export default function MicrophoneTest() {
       });
 
       setStatus('active');
+      setMicError(null);
       getMicrophones(); // refresh lists with label access granted
-      startWaveform();
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
       setStatus('denied');
+      setMicError({
+        name: e?.name || 'UnknownError',
+        message: e?.message || 'An unknown error occurred while accessing the microphone.'
+      });
     }
   };
 
@@ -118,8 +135,16 @@ export default function MicrophoneTest() {
     }
   }, [selectedDeviceId]);
 
-  // Clean up on unmount
+  // Start visualizer waveform loop when status becomes active and canvas is mounted
   useEffect(() => {
+    if (status === 'active') {
+      startWaveform();
+    }
+  }, [status]);
+
+  // Clean up on unmount and load initial state
+  useEffect(() => {
+    getMicrophones();
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
@@ -304,12 +329,34 @@ export default function MicrophoneTest() {
           <p className="font-sans text-xs text-body mb-6 leading-relaxed max-w-sm">
             To test your microphone and see your live voice waveform, please grant microphone permission when prompted by your browser.
           </p>
-          <button
-            onClick={requestMicPermission}
-            className="px-6 py-2.5 rounded-full font-sans text-xs font-semibold bg-ink text-canvas border border-ink hover:bg-ink/90 cursor-pointer shadow-sm"
-          >
-            Enable Microphone
-          </button>
+          
+          {window.self !== window.top && (
+            <div className="mb-6 p-4.5 rounded bg-brand-cyan/5 border border-brand-cyan/25 max-w-sm text-left">
+              <span className="font-sans text-xs font-semibold text-brand-cyan block mb-1">💡 Iframe Preview Detected</span>
+              <p className="font-sans text-[11px] text-body leading-relaxed">
+                You are currently viewing this app in a sandboxed preview frame. Browsers may prevent permission prompts within iframes. We highly recommend running the app in a <strong>New Tab</strong> for seamless access.
+              </p>
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={requestMicPermission}
+              className="px-6 py-2.5 rounded-full font-sans text-xs font-semibold bg-ink text-canvas border border-ink hover:bg-ink/90 cursor-pointer shadow-sm transition-colors"
+            >
+              Enable Microphone
+            </button>
+            {window.self !== window.top && (
+              <a
+                href={window.location.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center px-6 py-2.5 rounded-full font-sans text-xs font-semibold bg-canvas-soft text-ink border border-hairline hover:bg-canvas-soft-2 cursor-pointer shadow-sm transition-colors"
+              >
+                Open in New Tab
+              </a>
+            )}
+          </div>
         </div>
       )}
 
@@ -323,22 +370,57 @@ export default function MicrophoneTest() {
       )}
 
       {status === 'denied' && (
-        <div className="bg-canvas border border-hairline p-12 text-center rounded-lg premium-shadow-md max-w-xl mx-auto flex flex-col items-center">
+        <div className="bg-canvas border border-hairline p-8 text-center rounded-lg premium-shadow-md max-w-xl mx-auto flex flex-col items-center">
           <div className="w-12 h-12 rounded-sm bg-brand-pink/5 border border-brand-pink flex items-center justify-center text-brand-pink mb-5">
             <AlertCircle className="w-5 h-5" />
           </div>
           <h3 className="font-sans text-lg font-semibold tracking-tight text-ink mb-2">
-            Microphone Permission Denied
+            Microphone Blocked or Not Found
           </h3>
-          <p className="font-sans text-xs text-body mb-6 leading-relaxed max-w-sm">
-            Your browser blocked microphone access. Click the lock icon in your browser's address bar to allow microphone access, then try again.
-          </p>
-          <button
-            onClick={requestMicPermission}
-            className="px-6 py-2.5 rounded-full font-sans text-xs font-semibold bg-ink text-canvas border border-ink hover:bg-ink/90 cursor-pointer"
-          >
-            Try Connecting Again
-          </button>
+          
+          {window.self !== window.top ? (
+            <div className="mb-6 max-w-sm">
+              <p className="font-sans text-xs text-body leading-relaxed mb-4">
+                <strong>Sandbox Security Restriction:</strong> You are currently viewing this app inside a preview iframe. Modern browsers block device access inside nested frames for security reasons.
+              </p>
+              <p className="font-sans text-xs text-body leading-relaxed mb-4">
+                To test your microphone, please click <strong>"Open in New Tab"</strong> below to run the app directly, which allows secure browser device prompt.
+              </p>
+              
+              <a
+                href={window.location.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center px-6 py-2.5 rounded-full font-sans text-xs font-semibold bg-brand-cyan text-ink hover:bg-brand-cyan/90 cursor-pointer shadow-sm transition-colors"
+              >
+                Open in New Tab & Run Test
+              </a>
+            </div>
+          ) : (
+            <div className="mb-6 max-w-sm">
+              <p className="font-sans text-xs text-body leading-relaxed mb-4">
+                Your browser blocked microphone access or no compatible hardware was found.
+              </p>
+              {micError && (
+                <div className="font-mono text-[10px] text-brand-pink bg-brand-pink/5 p-3 rounded border border-brand-pink/25 mb-4 text-left whitespace-pre-wrap overflow-x-auto">
+                  <strong>Error Code:</strong> {micError.name}<br />
+                  <strong>Details:</strong> {micError.message}
+                </div>
+              )}
+              <p className="font-sans text-xs text-body leading-relaxed">
+                Click the lock icon in your browser's address bar to allow microphone access, verify your device connection, and try again.
+              </p>
+            </div>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              onClick={requestMicPermission}
+              className="px-5 py-2.5 rounded-full font-sans text-xs font-semibold bg-ink text-canvas border border-ink hover:bg-ink/90 cursor-pointer"
+            >
+              Try Connecting Again
+            </button>
+          </div>
         </div>
       )}
 

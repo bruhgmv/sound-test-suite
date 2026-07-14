@@ -2,6 +2,8 @@ import React from 'react';
 import { Activity, Headphones, Mic, Volume2, Music4, Sun, Moon } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { Tab } from '../types';
+// @ts-ignore
+import logoImg from '../assets/images/minimal_bw_sound_logo_1784013796271.jpg';
 
 interface HeaderProps {
   activeTab: Tab;
@@ -29,10 +31,24 @@ export default function Header({ activeTab, setActiveTab, theme, toggleTheme }: 
           <div className="relative flex items-center justify-center w-8 h-8 rounded bg-ink overflow-hidden transition-transform duration-200 group-hover:scale-105 border border-hairline">
             <img 
               src="/logo.jpg" 
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (!target.getAttribute('data-fallback')) {
+                  target.setAttribute('data-fallback', 'true');
+                  target.src = logoImg;
+                } else {
+                  target.style.display = 'none';
+                  const fb = target.nextElementSibling;
+                  if (fb) fb.classList.remove('hidden');
+                }
+              }}
               alt="Sound Test Logo" 
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
             />
+            <div className="logo-fallback hidden w-full h-full flex items-center justify-center bg-ink text-brand-cyan">
+              <Activity className="w-4 h-4" />
+            </div>
           </div>
           <div>
             <span className="font-sans font-semibold tracking-tight text-ink text-sm block leading-tight">Sound Test</span>
