@@ -1,0 +1,6 @@
+{
+  "name": "Sound Test Suite",
+  "description": "A premium, private client-side audio diagnostic workstation for testing speakers, spatial panning headphones, stereo channels, and microphones.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
